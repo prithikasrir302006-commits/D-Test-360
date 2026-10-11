@@ -1,0 +1,27 @@
+<svg width="1920" height="48" viewBox="0 0 1920 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Minimalist Architectural Field Operations Border matching WELLS beige and dark-grey palette -->
+  <rect width="1920" height="48" fill="#E4D8CE"/>
+  <line x1="0" y1="0.5" x2="1920" y2="0.5" stroke="#D3C7BD" stroke-width="1"/>
+  
+  <!-- Subtle repeating forensic micro-grids and technical registration marks -->
+  <line x1="120" y1="12" x2="120" y2="36" stroke="#C5B8AC" stroke-width="1" stroke-dasharray="2 2"/>
+  <circle cx="120" cy="24" r="3" fill="#A85F4B"/>
+  
+  <text x="140" y="27" fill="#77716C" font-family="'JetBrains Mono', monospace" font-size="9" letter-spacing="0.1em">D-TEST 360 // FIELD ENCLAVE</text>
+  
+  <line x1="480" y1="24" x2="720" y2="24" stroke="#D3C7BD" stroke-width="1"/>
+  <circle cx="600" cy="24" r="2" fill="#77716C"/>
+  <text x="740" y="27" fill="#8C8680" font-family="'JetBrains Mono', monospace" font-size="8.5" letter-spacing="0.15em">NARCOTICS CONTROL BUREAU FIELD OPERATIONS</text>
+  
+  <!-- Central Precision Ticks -->
+  <path d="M 940 18 L 960 18 L 960 30 L 940 30" stroke="#A85F4B" stroke-width="1" fill="none"/>
+  <circle cx="960" cy="24" r="1.5" fill="#A85F4B"/>
+  <text x="975" y="27" fill="#30302E" font-family="'JetBrains Mono', monospace" font-size="9" font-weight="600" letter-spacing="0.12em">SWGDRUG CAT. C COLORIMETRIC VERIFICATION</text>
+  
+  <line x1="1380" y1="24" x2="1620" y2="24" stroke="#D3C7BD" stroke-width="1"/>
+  <text x="1640" y="27" fill="#8C8680" font-family="'JetBrains Mono', monospace" font-size="8.5" letter-spacing="0.1em">SHA-256 TAMPER EVIDENCE LOG</text>
+  <circle cx="1800" cy="24" r="3" fill="#A85F4B"/>
+  <line x1="1800" y1="12" x2="1800" y2="36" stroke="#C5B8AC" stroke-width="1" stroke-dasharray="2 2"/>
+  
+  <line x1="0" y1="47.5" x2="1920" y2="47.5" stroke="#D3C7BD" stroke-width="1"/>
+</svg>

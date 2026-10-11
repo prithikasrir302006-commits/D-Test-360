@@ -1,0 +1,6 @@
+{
+  "name": "D-TEST 360 — Field Drug Testing Support System",
+  "description": "Field drug screening and preliminary testing support system for Narcotics Control Bureau (NCB) field operations with digital traceability.",
+  "requestFramePermissions": ["camera", "geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
