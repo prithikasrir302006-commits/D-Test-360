@@ -12,6 +12,8 @@ import { REAGENT_PROFILES } from '../utils/reagents';
 import {
   validateKitImageQuality,
   extractReactionColor,
+  extractPointColor,
+  hexToRgb,
   evaluateColorimetricTest,
 } from '../utils/colorimetric';
 import { generateRecordHash } from '../utils/crypto';
@@ -33,6 +35,7 @@ import {
   X,
   VideoOff,
   Download,
+  Pipette,
 } from 'lucide-react';
 
 interface NewTestWizardProps {
@@ -340,6 +343,53 @@ export const NewTestWizard: React.FC<NewTestWizardProps> = ({
       setCurrentStep(4); // Advance to results inspection
     };
     img.src = imageDataUrl;
+  };
+
+  // User interactive click on specimen image to sample exact point
+  const handleSamplePoint = (e: React.MouseEvent<HTMLImageElement>) => {
+    const img = e.currentTarget;
+    const rect = img.getBoundingClientRect();
+    const scaleX = (img.naturalWidth || 800) / rect.width;
+    const scaleY = (img.naturalHeight || 600) / rect.height;
+    const x = Math.round((e.clientX - rect.left) * scaleX);
+    const y = Math.round((e.clientY - rect.top) * scaleY);
+
+    const canvas = document.createElement('canvas');
+    canvas.width = img.naturalWidth || 800;
+    canvas.height = img.naturalHeight || 600;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    if (!ctx) return;
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+    const picked = extractPointColor(ctx, x, y, 4);
+    setExtractedColor(picked);
+
+    const evaluation = evaluateColorimetricTest(picked, selectedReagent, qualityReport || undefined);
+    setPreliminaryResult(evaluation.preliminaryResult);
+    setPresumptiveSubstance(evaluation.presumptiveSubstance);
+    setMatchedRefColor(evaluation.matchedReferenceColor);
+    setColorDeltaE(evaluation.colorDistanceDeltaE);
+    setConfidenceScore(evaluation.confidenceScore);
+
+    onShowToast('info', 'Point Sampled', `Sampled ${picked.hex} (${evaluation.preliminaryResult})`);
+  };
+
+  // Direct reference preset selection
+  const handleSelectReferencePreset = (hex: string, substanceName: string, isPositive: boolean) => {
+    const rgb = hexToRgb(hex);
+    const swatch = { hex, rgb, name: `${substanceName} (${hex})` };
+    setExtractedColor(swatch);
+    setMatchedRefColor(swatch);
+    setColorDeltaE(1.5);
+    setConfidenceScore(96);
+    if (isPositive) {
+      setPreliminaryResult('Presumptive Positive');
+      setPresumptiveSubstance(substanceName);
+    } else {
+      setPreliminaryResult('Presumptive Negative');
+      setPresumptiveSubstance('No Target Chromatic Shift Detected (Negative Baseline)');
+    }
+    onShowToast('success', 'Standard Applied', `${isPositive ? 'Presumptive Positive' : 'Presumptive Negative'}: ${substanceName}`);
   };
 
   // Advance to Step 6 (Final Sealing) & Compute SHA-256
@@ -1035,6 +1085,83 @@ export const NewTestWizard: React.FC<NewTestWizardProps> = ({
                       ΔE Deviation: {colorDeltaE}
                     </span>
                   </div>
+                </div>
+              </div>
+
+              {/* Interactive Eyedropper on Uploaded Image */}
+              {imageDataUrl && (
+                <div className="p-3.5 bg-[#F5F0EA] rounded-xl border border-[#D3C7BD] space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-semibold text-[#30302E] flex items-center gap-1.5">
+                      <Pipette className="w-4 h-4 text-[#A85F4B]" />
+                      <span>Interactive Eyedropper: Click on the image below to sample exact liquid/swatch</span>
+                    </span>
+                    <span className="text-[10px] bg-white border border-[#D3C7BD] px-2 py-0.5 rounded text-[#A85F4B] font-mono font-medium">
+                      Real-time Point Analysis
+                    </span>
+                  </div>
+                  <div className="relative rounded-xl overflow-hidden border border-[#D3C7BD] bg-black max-h-56 flex items-center justify-center cursor-crosshair group shadow-inner">
+                    <img
+                      src={imageDataUrl}
+                      alt="Click to sample"
+                      onClick={handleSamplePoint}
+                      className="max-h-56 w-auto max-w-full object-contain mx-auto"
+                      title="Click anywhere to sample exact spot color"
+                    />
+                    <div className="absolute bottom-2 left-2 px-2.5 py-1 bg-black/80 rounded-lg text-[10px] text-white font-mono pointer-events-none flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      <span>Click reaction liquid to re-sample</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Kit Chemical Standards (Quick-Match / Verify) */}
+              <div className="space-y-2 pt-2 border-t border-[#D3C7BD]">
+                <div className="text-xs font-semibold text-[#30302E] flex items-center justify-between">
+                  <span>Kit Reference Swatches &amp; Verification Presets:</span>
+                  <span className="text-[10px] text-[#77716C]">Click any swatch to apply standard</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                  {selectedReagent.referenceColors.map((ref, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => handleSelectReferencePreset(ref.expectedHex, ref.substanceName, true)}
+                      className="p-2.5 rounded-xl border border-[#D3C7BD] hover:border-[#A85F4B] bg-[#FAF6F2] hover:bg-[#FAF0ED] text-left flex items-center gap-2.5 transition-all cursor-pointer shadow-2xs hover:scale-[1.01]"
+                    >
+                      <span
+                        className="w-5 h-5 rounded-md border border-black/20 shrink-0 shadow-2xs"
+                        style={{ backgroundColor: ref.expectedHex }}
+                      />
+                      <div className="truncate">
+                        <div className="font-bold text-[#A85F4B] text-[11px] flex items-center gap-1">
+                          <CheckCircle2 className="w-3 h-3 text-[#A85F4B]" />
+                          <span>Positive: {ref.substanceName}</span>
+                        </div>
+                        <div className="text-[10px] text-[#77716C] truncate">{ref.description}</div>
+                      </div>
+                    </button>
+                  ))}
+
+                  {/* Negative Baseline standard */}
+                  <button
+                    type="button"
+                    onClick={() => handleSelectReferencePreset(selectedReagent.negativeExpectedColor.hex, 'Negative Baseline Standard', false)}
+                    className="p-2.5 rounded-xl border border-[#D3C7BD] hover:border-emerald-600 bg-emerald-50/50 hover:bg-emerald-50 text-left flex items-center gap-2.5 transition-all cursor-pointer shadow-2xs hover:scale-[1.01]"
+                  >
+                    <span
+                      className="w-5 h-5 rounded-md border border-black/20 shrink-0 shadow-2xs"
+                      style={{ backgroundColor: selectedReagent.negativeExpectedColor.hex }}
+                    />
+                    <div className="truncate">
+                      <div className="font-bold text-emerald-800 text-[11px] flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                        <span>Presumptive Negative Standard</span>
+                      </div>
+                      <div className="text-[10px] text-[#77716C] truncate">{selectedReagent.negativeExpectedColor.description}</div>
+                    </div>
+                  </button>
                 </div>
               </div>
             </div>
